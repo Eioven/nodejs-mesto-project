@@ -4,9 +4,8 @@ import Card from '../models/card';
 
 export const createCard = async (req: Request, res: Response) => {
   const { name, link } = req.body;
-  const anyReq = req as any;
 
-  if (!anyReq.user) {
+  if (!req.user) {
     return res.status(401).send({ message: 'Unauthorized' });
   }
 
@@ -14,7 +13,7 @@ export const createCard = async (req: Request, res: Response) => {
     const card = await Card.create({
       name,
       link,
-      owner: anyReq.user.id,
+      owner: req.user.id,
     });
     return res.status(201).send(card);
   } catch (err) {
@@ -37,9 +36,8 @@ export const getCards = async (req: Request, res: Response) => {
 export const deleteCard = async (req: Request, res: Response) => {
   try {
     const { cardId } = req.params;
-    const anyReq = req as any;
 
-    if (!anyReq.user) {
+    if (!req.user) {
       return res.status(401).send({ message: 'Unauthorized' });
     }
 
@@ -49,7 +47,7 @@ export const deleteCard = async (req: Request, res: Response) => {
       return res.status(404).send({ message: 'Карточка с указанным _id не найдена' });
     }
 
-    if (card.owner.toString() !== anyReq.user.id) {
+    if (card.owner.toString() !== req.user.id) {
       return res.status(403).send({ message: 'Forbidden: You can only delete your own cards' });
     }
 
@@ -65,14 +63,13 @@ export const deleteCard = async (req: Request, res: Response) => {
 
 export const likeCard = async (req: Request, res: Response) => {
   try {
-    const anyReq = req as any;
-    if (!anyReq.user) {
+    if (!req.user) {
       return res.status(401).send({ message: 'Unauthorized' });
     }
 
     const card = await Card.findByIdAndUpdate(
       req.params.cardId,
-      { $addToSet: { likes: anyReq.user.id } },
+      { $addToSet: { likes: req.user.id } },
       { new: true },
     );
 
@@ -91,14 +88,13 @@ export const likeCard = async (req: Request, res: Response) => {
 
 export const dislikeCard = async (req: Request, res: Response) => {
   try {
-    const anyReq = req as any;
-    if (!anyReq.user) {
+    if (!req.user) {
       return res.status(401).send({ message: 'Unauthorized' });
     }
 
     const card = await Card.findByIdAndUpdate(
       req.params.cardId,
-      { $pull: { likes: anyReq.user.id } },
+      { $pull: { likes: req.user.id } },
       { new: true },
     );
 

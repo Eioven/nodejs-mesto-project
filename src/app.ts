@@ -19,7 +19,7 @@ db.once('open', () => {
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
-app.use((req: any, res: Response, next: NextFunction) => {
+app.use((req: Request, res: Response, next: NextFunction) => {
   req.user = {
     id: '6923bd13bb3ae1e13ae34834',
   };

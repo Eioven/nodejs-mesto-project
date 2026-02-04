@@ -41,8 +41,7 @@ export const createUser = async (req: Request, res: Response) => {
 };
 
 export const updateProfile = async (req: Request, res: Response) => {
-  const anyReq = req as any;
-  if (!anyReq.user) {
+  if (!req.user) {
     return res.status(401).send({ message: 'Unauthorized' });
   }
 
@@ -54,7 +53,7 @@ export const updateProfile = async (req: Request, res: Response) => {
 
   try {
     const user = await User.findByIdAndUpdate(
-      anyReq.user.id,
+      req.user.id,
       { name, about },
       { new: true, runValidators: true },
     );
@@ -76,8 +75,7 @@ export const updateProfile = async (req: Request, res: Response) => {
 };
 
 export const updateAvatar = async (req: Request, res: Response) => {
-  const anyReq = req as any;
-  if (!anyReq.user) {
+  if (!req.user) {
     return res.status(401).send({ message: 'Unauthorized' });
   }
 
@@ -89,7 +87,7 @@ export const updateAvatar = async (req: Request, res: Response) => {
 
   try {
     const user = await User.findByIdAndUpdate(
-      anyReq.user.id,
+      req.user.id,
       { avatar },
       { new: true, runValidators: true },
     );
