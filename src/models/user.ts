@@ -35,12 +35,12 @@ const userSchema = new Schema<IUser>({
     type: String,
     required: false,
     unique: true,
-    sparse: true, // Allows multiple documents with null value for this field
+    sparse: true,
   },
   password: {
     type: String,
     required: false,
-    select: false, // Don't include password in queries by default
+    select: false,
   },
 });
 
