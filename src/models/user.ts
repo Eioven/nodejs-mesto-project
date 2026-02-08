@@ -1,11 +1,12 @@
 import mongoose, { Document, Schema } from 'mongoose';
+import validator from 'validator';
 
 interface IUser extends Document {
   name: string;
   about: string;
   avatar: string;
-  email?: string;
-  password?: string;
+  email: string;
+  password: string;
 }
 
 const userSchema = new Schema<IUser>({
@@ -13,34 +14,40 @@ const userSchema = new Schema<IUser>({
     type: String,
     minlength: 2,
     maxlength: 30,
-    required: true,
+    default: 'Жак-Ив Кусто',
   },
   about: {
     type: String,
     minlength: 2,
     maxlength: 200,
-    required: true,
+    default: 'Исследователь',
   },
   avatar: {
     type: String,
-    required: true,
+    default: 'https://pictures.s3.yandex.net/resources/jacques-cousteau_1604399756.png',
     validate: {
       validator(v: string) {
-        return /^https?:\/\/(www\.)?[a-zA-Z\d-.]{1,}\.[a-z]{1,6}([/\w .-]*)#?$/.test(v);
+        return /^https?:\/\/(www\.)?[a-zA-Z\d\-._~:?#\[\]@!$&'()*+,;=]{1,}\.[a-z]{1,6}([a-zA-Z\d\-._~:?#\[\]@!$&'()*+,;=\/]*)#?$/.test(v);
       },
       message: 'Некорректный URL',
     },
   },
   email: {
     type: String,
-    required: false,
+    required: true,
     unique: true,
-    sparse: true, // Allows multiple documents with null value for this field
+    validate: {
+      validator(v: string) {
+        return validator.isEmail(v);
+      },
+      message: 'Некорректный email',
+    },
   },
   password: {
     type: String,
-    required: false,
-    select: false, // Don't include password in queries by default
+    required: true,
+    minlength: 8,
+    select: false,
   },
 });
 

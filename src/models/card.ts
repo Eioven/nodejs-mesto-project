@@ -20,7 +20,7 @@ const cardSchema = new Schema<ICard>({
     required: true,
     validate: {
       validator(v: string) {
-        return /^https?:\/\/(www\.)?[a-zA-Z\d-.]{1,}\.[a-z]{1,6}([/\w .-]*)#?$/.test(v);
+        return /^https?:\/\/(www\.)?[a-zA-Z\d\-._~:?#\[\]@!$&'()*+,;=]{1,}\.[a-z]{1,6}([a-zA-Z\d\-._~:?#\[\]@!$&'()*+,;=\/]*)#?$/.test(v);
       },
       message: 'Некорректный URL',
     },
@@ -30,13 +30,11 @@ const cardSchema = new Schema<ICard>({
     ref: 'user',
     required: true,
   },
-  likes: {
-    type: [{
-      type: Schema.Types.ObjectId,
-      ref: 'user',
-    }],
+  likes: [{
+    type: Schema.Types.ObjectId,
+    ref: 'user',
     default: [],
-  },
+  }],
   createdAt: {
     type: Date,
     default: Date.now,

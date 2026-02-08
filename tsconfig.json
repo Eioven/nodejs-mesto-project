@@ -1,7 +1,4 @@
 {
-  "ts-node": {
-    "files": true
-  },
   "compilerOptions": {
     /* Set the JavaScript language version for emitted JavaScript and include compatible library declarations. */
     "target": "es6",                                  
@@ -23,10 +20,6 @@
   "include": [
     "src/**/*.ts",
     "src/types/**/*.d.ts"
-  ],
-  "typeRoots": [
-    "./node_modules/@types",
-    "./src/types"
   ],
   "exclude": [
     "node_modules"

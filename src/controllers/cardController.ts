@@ -1,112 +1,111 @@
-import { Request, Response } from 'express';
-import mongoose from 'mongoose';
+import { Request, Response, NextFunction } from 'express';
 import Card from '../models/card';
+import { AuthRequest } from '../middlewares/auth';
+import {
+  NotFoundError,
+  UnauthorizedError,
+  ForbiddenError,
+} from '../middlewares/errorHandler';
 
-export const createCard = async (req: Request, res: Response) => {
-  const { name, link } = req.body;
-
-  if (!req.user) {
-    return res.status(401).send({ message: 'Unauthorized' });
-  }
-
+export const createCard = async (req: Request, res: Response, next: NextFunction) => {
   try {
+    const { name, link } = req.body;
+    const authReq = req as AuthRequest;
+
+    if (!authReq.user) {
+      throw new UnauthorizedError('Необходима авторизация');
+    }
+
     const card = await Card.create({
       name,
       link,
-      owner: req.user.id,
+      owner: authReq.user._id,
     });
-    return res.status(201).send(card);
+    res.status(201).send(card);
   } catch (err) {
-    if (err instanceof mongoose.Error.ValidationError) {
-      return res.status(400).send({ message: 'Переданы некорректные данные при создании карточки' });
-    }
-    return res.status(500).send({ message: 'Ошибка по умолчанию' });
+    next(err);
   }
 };
 
-export const getCards = async (req: Request, res: Response) => {
+export const getCards = async (req: Request, res: Response, next: NextFunction) => {
   try {
     const cards = await Card.find({});
     res.status(200).send(cards);
   } catch (err) {
-    res.status(500).send({ message: 'Ошибка по умолчанию' });
+    next(err);
   }
 };
 
-export const deleteCard = async (req: Request, res: Response) => {
+export const deleteCard = async (req: Request, res: Response, next: NextFunction) => {
   try {
     const { cardId } = req.params;
+    const authReq = req as AuthRequest;
 
-    if (!req.user) {
-      return res.status(401).send({ message: 'Unauthorized' });
+    if (!authReq.user) {
+      throw new UnauthorizedError('Необходима авторизация');
     }
 
     const card = await Card.findById(cardId);
 
     if (!card) {
-      return res.status(404).send({ message: 'Карточка с указанным _id не найдена' });
+      throw new NotFoundError('Карточка с указанным _id не найдена');
     }
 
-    if (card.owner.toString() !== req.user.id) {
-      return res.status(403).send({ message: 'Forbidden: You can only delete your own cards' });
+    if (card.owner.toString() !== authReq.user._id) {
+      throw new ForbiddenError('Вы можете удалить только свою карточку');
     }
 
     await Card.findByIdAndDelete(cardId);
-    return res.status(200).send({ message: 'Card deleted successfully' });
+    res.status(200).send({ message: 'Карточка удалена' });
   } catch (err) {
-    if (err instanceof mongoose.Error.CastError) {
-      return res.status(400).send({ message: 'Передан некорректный _id карточки' });
-    }
-    return res.status(500).send({ message: 'Ошибка по умолчанию' });
+    next(err);
   }
 };
 
-export const likeCard = async (req: Request, res: Response) => {
+export const likeCard = async (req: Request, res: Response, next: NextFunction) => {
   try {
-    if (!req.user) {
-      return res.status(401).send({ message: 'Unauthorized' });
+    const authReq = req as AuthRequest;
+
+    if (!authReq.user) {
+      throw new UnauthorizedError('Необходима авторизация');
     }
 
     const card = await Card.findByIdAndUpdate(
       req.params.cardId,
-      { $addToSet: { likes: req.user.id } },
+      { $addToSet: { likes: authReq.user._id } },
       { new: true },
     );
 
     if (!card) {
-      return res.status(404).send({ message: 'Карточка не найдена' });
+      throw new NotFoundError('Карточка не найдена');
     }
 
-    return res.status(200).send(card);
+    res.status(200).send(card);
   } catch (err) {
-    if (err instanceof mongoose.Error.CastError) {
-      return res.status(400).send({ message: 'Передан некорректный _id карточки' });
-    }
-    return res.status(500).send({ message: 'Ошибка по умолчанию' });
+    next(err);
   }
 };
 
-export const dislikeCard = async (req: Request, res: Response) => {
+export const dislikeCard = async (req: Request, res: Response, next: NextFunction) => {
   try {
-    if (!req.user) {
-      return res.status(401).send({ message: 'Unauthorized' });
+    const authReq = req as AuthRequest;
+
+    if (!authReq.user) {
+      throw new UnauthorizedError('Необходима авторизация');
     }
 
     const card = await Card.findByIdAndUpdate(
       req.params.cardId,
-      { $pull: { likes: req.user.id } },
+      { $pull: { likes: authReq.user._id } },
       { new: true },
     );
 
     if (!card) {
-      return res.status(404).send({ message: 'Карточка не найдена' });
+      throw new NotFoundError('Карточка не найдена');
     }
 
-    return res.status(200).send(card);
+    res.status(200).send(card);
   } catch (err) {
-    if (err instanceof mongoose.Error.CastError) {
-      return res.status(400).send({ message: 'Передан некорректный _id карточки' });
-    }
-    return res.status(500).send({ message: 'Ошибка по умолчанию' });
+    next(err);
   }
 };
