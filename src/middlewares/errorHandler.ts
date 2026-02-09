@@ -1,11 +1,12 @@
 import { Request, Response, NextFunction } from 'express';
+import HTTP_STATUS from '../utils/statusCodes';
 
 export class NotFoundError extends Error {
   statusCode: number;
 
   constructor(message: string) {
     super(message);
-    this.statusCode = 404;
+    this.statusCode = HTTP_STATUS.NOT_FOUND;
   }
 }
 
@@ -14,7 +15,7 @@ export class BadRequestError extends Error {
 
   constructor(message: string) {
     super(message);
-    this.statusCode = 400;
+    this.statusCode = HTTP_STATUS.BAD_REQUEST;
   }
 }
 
@@ -23,7 +24,7 @@ export class UnauthorizedError extends Error {
 
   constructor(message: string) {
     super(message);
-    this.statusCode = 401;
+    this.statusCode = HTTP_STATUS.UNAUTHORIZED;
   }
 }
 
@@ -32,7 +33,7 @@ export class ForbiddenError extends Error {
 
   constructor(message: string) {
     super(message);
-    this.statusCode = 403;
+    this.statusCode = HTTP_STATUS.FORBIDDEN;
   }
 }
 
@@ -41,7 +42,7 @@ export class ConflictError extends Error {
 
   constructor(message: string) {
     super(message);
-    this.statusCode = 409;
+    this.statusCode = HTTP_STATUS.CONFLICT;
   }
 }
 
@@ -50,27 +51,27 @@ export class InternalServerError extends Error {
 
   constructor(message: string) {
     super(message);
-    this.statusCode = 500;
+    this.statusCode = HTTP_STATUS.INTERNAL_SERVER_ERROR;
   }
 }
 
 const errorHandler = (err: any, req: Request, res: Response, _next: NextFunction) => {
-  let statusCode = err.statusCode || 500;
+  let statusCode = err.statusCode || HTTP_STATUS.INTERNAL_SERVER_ERROR;
   let message = err.message || 'На сервере произошла ошибка';
 
   if (err.name === 'ValidationError') {
-    statusCode = 400;
+    statusCode = HTTP_STATUS.BAD_REQUEST;
     message = err.message;
   } else if (err.name === 'CastError' || err.name === 'SyntaxError') {
-    statusCode = 400;
+    statusCode = HTTP_STATUS.BAD_REQUEST;
     message = 'Переданы некорректные данные';
   } else if (err.code === 11000) {
-    statusCode = 409;
+    statusCode = HTTP_STATUS.CONFLICT;
     message = 'Пользователь с таким email уже существует';
   }
 
   res.status(statusCode).send({
-    message: statusCode === 500 ? 'На сервере произошла ошибка' : message,
+    message: statusCode === HTTP_STATUS.INTERNAL_SERVER_ERROR ? 'На сервере произошла ошибка' : message,
   });
 };
 

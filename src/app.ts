@@ -1,45 +1,43 @@
-import express, {
-  Express,
-} from 'express';
+import express, { Express } from 'express';
 import mongoose from 'mongoose';
+import { errors } from 'celebrate';
+import authRouter from './routes/authRoutes';
 import userRouter from './routes/userRoutes';
 import cardRouter from './routes/cardRoutes';
-import { login, createUser } from './controllers/userController';
+import { auth } from './middlewares/auth';
 import { requestLogger, errorLogger } from './middlewares/logger';
 import errorHandler from './middlewares/errorHandler';
+import HTTP_STATUS from './utils/statusCodes';
 
 const app: Express = express();
 const PORT = 3000;
-
-mongoose.connect('mongodb://localhost:27017/mestodb');
-
-const db = mongoose.connection;
-db.on('error', (err) => {
-  console.error('MongoDB connection error:', err);
-});
-db.once('open', () => {
-  console.log('Connected to MongoDB database: mestodb');
-});
 
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
 app.use(requestLogger);
 
-app.use('/', userRouter);
+app.use('/', authRouter);
+app.use(auth);
+app.use('/users', userRouter);
 app.use('/cards', cardRouter);
 
-app.post('/signin', (req, res, next) => login(req, res, next));
-app.post('/signup', (req, res, next) => createUser(req, res, next));
-
 app.use((req, res) => {
-  res.status(404).send({ message: 'Запрашиваемый ресурс не найден' });
+  res.status(HTTP_STATUS.NOT_FOUND).send({ message: 'Запрашиваемый ресурс не найден' });
 });
 
 app.use(errorLogger);
-
+app.use(errors());
 app.use(errorHandler);
 
-app.listen(PORT, () => {
-  console.log(`Server is running on port ${PORT}`);
+async function start() {
+  await mongoose.connect('mongodb://localhost:27017/mestodb');
+  console.log('Connected to MongoDB database: mestodb');
+  app.listen(PORT, () => {
+    console.log(`Server is running on port ${PORT}`);
+  });
+}
+
+start().catch((err) => {
+  console.error('MongoDB connection error:', err);
 });
